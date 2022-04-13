@@ -61,17 +61,17 @@ def create_message():
     text = "Netflix:\n\n"
     for utente in utenti:
         if utente.get_name() in Netflix:
-            text += utente.get_name() + " " + "%0.1f" % utente.get_abbonamenti()["Netflix"] + " €\n"
+            text += utente.get_name() + " " + "%0.2f" % utente.get_abbonamenti()["Netflix"] + " €\n"
     text += "\n"
     text += "Disney+:\n\n"
     for utente in utenti:
         if utente.get_name() in Disney:
-            text += utente.get_name() + " " + "%0.1f" % utente.get_abbonamenti()["Disney+"] + " €\n"
+            text += utente.get_name() + " " + "%0.2f" % utente.get_abbonamenti()["Disney+"] + " €\n"
     text += "\n"
     text += "Totale Quote:\n\n"
     for utente in utenti:
         if utente.get_name() in Netflix or utente.get_name() in Disney:
-            text += utente.get_name() + " " + "%0.1f" % total(utente) + " €\n"
+            text += utente.get_name() + " " + "%0.2f" % total(utente) + " €\n"
     text += "\n"
     return text
 
@@ -137,7 +137,7 @@ def create_message_automatic(Set,text):
     app = text + ":\n\n"
     for utente in utenti:
         if utente.get_name() in Set:
-            app += utente.get_name() + " " + "%0.1f" % utente.get_abbonamenti()[text] + " €\n"
+            app += utente.get_name() + " " + "%0.2f" % utente.get_abbonamenti()[text] + " €\n"
     app += "\n"
     return app
 
