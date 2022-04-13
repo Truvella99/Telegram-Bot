@@ -1,7 +1,4 @@
-# coding=utf-8
 import telebot
-#pip install pyTelegramBotAPI pip install python-dotenv
-#from telebot.types import CallbackQuery
 import datetime
 from user import user
 from threading import Thread
@@ -207,4 +204,3 @@ def handle_query(call):
 
 t = Thread(target=automatic)
 bot.infinity_polling()
-#bot.polling()
