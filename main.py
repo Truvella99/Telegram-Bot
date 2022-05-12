@@ -1,11 +1,14 @@
+# coding=utf-8
 import telebot
+#pip install pyTelegramBotAPI
+#pip install python-dotenv
+#from telebot.types import CallbackQuery
 import datetime
 from user import user
 from threading import Thread
 from time import sleep
 import os
 from dotenv import load_dotenv
-
 load_dotenv()
 
 apiKey = os.getenv('API_KEY')
@@ -47,7 +50,7 @@ def calculate_amount(price,Set):
 def calculate_subscription(Set,price,name):
     for utente in utenti:
         for nome in Set:
-            if utente.get_name() == nome:
+            if utente.get_name() == nome and utente.get_name() != "Domenico":
                 utente.add_soldi(name, price)
 
 def total(user):
@@ -203,4 +206,5 @@ def handle_query(call):
             utente.remove_soldi("Disney+",calculate_amount(Disney_price,Disney))
 
 t = Thread(target=automatic)
-bot.infinity_polling()
+bot.infinity_polling(timeout=10, long_polling_timeout = 5)
+#bot.polling()
