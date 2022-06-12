@@ -162,11 +162,11 @@ def handle_query(call):
     #Rinnovo Netflix
     if (call.data == "['0']"):
         calculate_subscription(Netflix,calculate_amount(Netflix_price,Netflix),Netflix_name)
-        bot.answer_callback_query(call.id)
+        bot.answer_callback_query(call.id,"Abbonamento " + Netflix_name + " Rinnovato")
     #Rinnovo Disney+
     if (call.data == "['1']"):
         calculate_subscription(Disney,calculate_amount(Disney_price,Disney),Disney_name)
-        bot.answer_callback_query(call.id)
+        bot.answer_callback_query(call.id,"Abbonamento " + Disney_name + " Rinnovato")
     #Aggiunta Utente Netflix
     if (call.data == "['2']"):
         temp = False
@@ -180,7 +180,7 @@ def handle_query(call):
             app = user(nuovo_utente, {"Netflix": 0})
             utenti.add(app)
             Netflix.add(app.get_name())
-        bot.answer_callback_query(call.id)
+        bot.answer_callback_query(call.id,"Utente " + nuovo_utente + " Aggiunto a " + Netflix_name)
     #Aggiunta Utente Disney+
     if (call.data == "['3']"):
         temp = False
@@ -194,24 +194,24 @@ def handle_query(call):
             app = user(nuovo_utente, {"Disney+": 0})
             utenti.add(app)
             Disney.add(app.get_name())
-        bot.answer_callback_query(call.id)
+        bot.answer_callback_query(call.id,"Utente " + nuovo_utente + " Aggiunto a " + Disney_name)
     # Rimozione Utente
     for utente in utenti:
         if call.data == "['" + utente.get_name() + "/Disney+_Rimozione" + "']":
             utente.remove_abbonamenti("Disney+")
             Disney.remove(utente.get_name())
-            bot.answer_callback_query(call.id)
+            bot.answer_callback_query(call.id,"Utente " + utente.get_name() + " Rimosso da " + Disney_name)
         if call.data == "['" + utente.get_name() + "/Netflix_Rimozione" + "']":
             utente.remove_abbonamenti("Netflix")
             Netflix.remove(utente.get_name())
-            bot.answer_callback_query(call.id)
+            bot.answer_callback_query(call.id,"Utente " + utente.get_name() + " Rimosso da " + Netflix_name)
         #ScontoUtente
         if call.data == "['" + utente.get_name() + "/Netflix_Sconto" + "']":
             utente.remove_soldi("Netflix",calculate_amount(Netflix_price,Netflix))
-            bot.answer_callback_query(call.id)
+            bot.answer_callback_query(call.id,"Abbonamento " + Netflix_name + " Scontato a " + utente.get_name())
         if call.data == "['" + utente.get_name() + "/Disney+_Sconto" + "']":
             utente.remove_soldi("Disney+",calculate_amount(Disney_price,Disney))
-            bot.answer_callback_query(call.id)
+            bot.answer_callback_query(call.id,"Abbonamento " + Disney_name + " Scontato a " + utente.get_name())
 
 t = Thread(target=automatic)
 bot.infinity_polling(timeout=10, long_polling_timeout = 5)
