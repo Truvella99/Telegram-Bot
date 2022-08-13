@@ -51,14 +51,7 @@ def calculate_subscription(Set,price,name):
     for utente in utenti:
         for nome in Set:
             if utente.get_name() == nome and utente.get_name() != "Domenico":
-                utente.add_soldi(name, price)
-
-def total(user):
-    total = 0
-    di = user.get_abbonamenti()
-    for price in di.values():
-        total += price
-    return total
+                utente.add_amount(name, price)
 
 def create_message():
     text = "Netflix:\n\n"
@@ -73,8 +66,7 @@ def create_message():
     text += "\n"
     text += "Totale Quote:\n\n"
     for utente in utenti:
-        if utente.get_name() in Netflix or utente.get_name() in Disney:
-            text += utente.get_name() + " " + "%0.2f" % total(utente) + " €\n"
+        text += utente.__str__()
     text += "\n"
     return text
 
@@ -130,12 +122,6 @@ def sconto(message):
         opzioni.add(telebot.types.InlineKeyboardButton(text=utente + "/Disney+", callback_data="['" + utente + "/Disney+_Sconto" + "']"))
     bot.send_message(message.chat.id, "A quale Utente ti riferisci ?", reply_markup=opzioni)
 
-@bot.message_handler(commands=['reset'])
-def reset():
-    for utente in utenti:
-        for abbonamento in utente.get_abbonamenti.keys():
-            utente.get_abbonamenti[abbonamento] = 0
-
 def create_message_automatic(Set,text):
     app = text + ":\n\n"
     for utente in utenti:
@@ -169,48 +155,52 @@ def handle_query(call):
         bot.answer_callback_query(call.id,"Abbonamento " + Disney_name + " Rinnovato")
     #Aggiunta Utente Netflix
     if (call.data == "['2']"):
-        temp = False
+        user_already_created = False
         for utente in utenti:
             if utente.get_name() == nuovo_utente:
-                temp = True
+                user_already_created = True
                 if "Netflix" not in utente.get_abbonamenti():
                     utente.get_abbonamenti()["Netflix"]=0
                     Netflix.add(nuovo_utente)
-        if temp == False:
+        if not user_already_created:
             app = user(nuovo_utente, {"Netflix": 0})
             utenti.add(app)
             Netflix.add(app.get_name())
         bot.answer_callback_query(call.id,"Utente " + nuovo_utente + " Aggiunto a " + Netflix_name)
     #Aggiunta Utente Disney+
     if (call.data == "['3']"):
-        temp = False
+        user_already_created = False
         for utente in utenti:
             if utente.get_name() == nuovo_utente:
-                temp = True
+                user_already_created = True
                 if "Disney+" not in utente.get_abbonamenti():
                     utente.get_abbonamenti()["Disney+"] = 0
                     Disney.add(nuovo_utente)
-        if temp == False:
+        if not user_already_created:
             app = user(nuovo_utente, {"Disney+": 0})
             utenti.add(app)
             Disney.add(app.get_name())
         bot.answer_callback_query(call.id,"Utente " + nuovo_utente + " Aggiunto a " + Disney_name)
     # Rimozione Utente
-    for utente in utenti:
+    for utente in utenti.copy():
         if call.data == "['" + utente.get_name() + "/Disney+_Rimozione" + "']":
             utente.remove_abbonamenti("Disney+")
             Disney.remove(utente.get_name())
+            if (utente.empty_abbonamenti()):
+                utenti.remove(utente)
             bot.answer_callback_query(call.id,"Utente " + utente.get_name() + " Rimosso da " + Disney_name)
         if call.data == "['" + utente.get_name() + "/Netflix_Rimozione" + "']":
             utente.remove_abbonamenti("Netflix")
             Netflix.remove(utente.get_name())
+            if (utente.empty_abbonamenti()):
+                utenti.remove(utente)
             bot.answer_callback_query(call.id,"Utente " + utente.get_name() + " Rimosso da " + Netflix_name)
         #ScontoUtente
         if call.data == "['" + utente.get_name() + "/Netflix_Sconto" + "']":
-            utente.remove_soldi("Netflix",calculate_amount(Netflix_price,Netflix))
+            utente.remove_amount("Netflix",calculate_amount(Netflix_price,Netflix))
             bot.answer_callback_query(call.id,"Abbonamento " + Netflix_name + " Scontato a " + utente.get_name())
         if call.data == "['" + utente.get_name() + "/Disney+_Sconto" + "']":
-            utente.remove_soldi("Disney+",calculate_amount(Disney_price,Disney))
+            utente.remove_amount("Disney+",calculate_amount(Disney_price,Disney))
             bot.answer_callback_query(call.id,"Abbonamento " + Disney_name + " Scontato a " + utente.get_name())
 
 t = Thread(target=automatic)
