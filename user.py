@@ -25,7 +25,7 @@ class user():
         self.__abbonamenti[abbonamento] += amount
 
     def remove_amount(self,abbonamento, amount):
-        if self.abbonamenti[abbonamento] > 0 and self.abbonamenti[abbonamento]-amount >= 0:
+        if self.__abbonamenti[abbonamento] > 0 and self.__abbonamenti[abbonamento]-amount >= 0:
             self.__abbonamenti[abbonamento] -= amount
         else:
             self.__abbonamenti[abbonamento] = 0
