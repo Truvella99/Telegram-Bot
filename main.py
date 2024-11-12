@@ -8,6 +8,7 @@ from user import user
 from threading import Thread
 from time import sleep
 import os
+import re
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -24,7 +25,7 @@ utenti = {Domenico, Gaetano, Dominic, Chiara}
 
 Netflix = {Domenico.get_name(), Gaetano.get_name(), Dominic.get_name(), Chiara.get_name()}
 
-Disney = {}
+Disney = set()
 
 rinnovo_netflix=datetime.date(2021,12,12)
 rinnovo_disney=datetime.date(2021,12,23)
@@ -114,6 +115,48 @@ def set_utente(message):
         opzioni.add(telebot.types.InlineKeyboardButton(text=key, callback_data="['" + str(value + 2) + "']"))
     bot.send_message(message.chat.id, "A quale abbonamento vuoi aggiungerlo ?", reply_markup=opzioni)
 
+@bot.message_handler(commands=['aggiunta_rimozione_importo'])
+def aggiungi(message):
+    app = bot.reply_to(message,"Inserire l'importo da aggiungere (positivo) o rimuovere (negativo) all'utente:")
+    bot.register_next_step_handler(app,handle_amount)
+    
+def handle_amount(message):
+    try:
+        # Try to convert the user input to float
+        amount = float(message.text)
+        # If successful, go on
+        amount = message.text
+        opzioni = telebot.types.InlineKeyboardMarkup()
+        for utente in Netflix:
+            opzioni.add(telebot.types.InlineKeyboardButton(text=utente + "/Netflix", callback_data="['" + utente + "/Netflix_Amount:" + amount + "']"))
+        for utente in Disney:
+            opzioni.add(telebot.types.InlineKeyboardButton(text=utente + "/Disney+", callback_data="['" + utente + "/Disney+_Amount:" + amount + "']"))
+        bot.send_message(message.chat.id, "A quale Utente ti riferisci ?", reply_markup=opzioni)
+    except ValueError:
+        # If conversion fails, inform the user
+        bot.reply_to(message, "Errore: l'importo deve essere un numero.")
+
+@bot.message_handler(commands=['cambio_prezzo_abbonamento'])
+def aggiungi(message):
+    app = bot.reply_to(message,"Inserire il nuovo importo dell'abbonamento:")
+    bot.register_next_step_handler(app,handle_subscription)
+    
+def handle_subscription(message):
+    try:
+        # Try to convert the user input to float
+        amount = float(message.text)
+        if amount <= 0:
+            bot.reply_to(message, "Errore: l'importo deve essere maggiore di 0.")
+            return
+        # If successful, go on
+        amount = message.text
+        opzioni = telebot.types.InlineKeyboardMarkup()
+        opzioni.add(telebot.types.InlineKeyboardButton(text="Netflix", callback_data="['" + "/Netflix_Subscription:" + amount + "']"))
+        opzioni.add(telebot.types.InlineKeyboardButton(text="Disney+", callback_data="['" + "/Disney+_Subscription:" + amount + "']"))
+        bot.send_message(message.chat.id, "A quale Abbonamento ti riferisci ?", reply_markup=opzioni)
+    except ValueError:
+        # If conversion fails, inform the user
+        bot.reply_to(message, "Errore: l'importo deve essere un numero.")
 
 @bot.message_handler(commands=['sconto_utente'])
 def sconto(message):
@@ -147,6 +190,8 @@ def automatic(activeNetflix,activeDisney):
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     global utenti
+    global Netflix_price
+    global Disney_price
     #Rinnovo Netflix
     if (call.data == "['0']"):
         calculate_subscription(Netflix,calculate_amount(Netflix_price,Netflix),Netflix_name)
@@ -155,6 +200,18 @@ def handle_query(call):
     if (call.data == "['1']"):
         calculate_subscription(Disney,calculate_amount(Disney_price,Disney),Disney_name)
         bot.answer_callback_query(call.id,"Abbonamento " + Disney_name + " Rinnovato")
+    #Cambio Prezzo Abbomamento Netflix
+    matchNetflixSubscription = re.search(r"\['/Netflix_Subscription:([-+]?\d*\.?\d+)\']", call.data)
+    if matchNetflixSubscription:
+        newNetflixPrice = float(matchNetflixSubscription.group(1))
+        Netflix_price = newNetflixPrice
+        bot.answer_callback_query(call.id,"Prezzo " + Netflix_name + " Cambiato.")
+    #Cambio Prezzo Abbomamento Disney+
+    matchDisneySubscription = re.search(r"\['/Disney\+_Subscription:([-+]?\d*\.?\d+)\']", call.data)
+    if matchDisneySubscription:
+        newDisneyPrice = float(matchDisneySubscription.group(1))
+        Disney_price = newDisneyPrice
+        bot.answer_callback_query(call.id,"Prezzo " + Disney_name + " Cambiato.")
     #Aggiunta Utente Netflix
     if (call.data == "['2']"):
         user_already_created = False
@@ -204,6 +261,33 @@ def handle_query(call):
         if call.data == "['" + utente.get_name() + "/Disney+_Sconto" + "']":
             utente.remove_amount("Disney+",calculate_amount(Disney_price,Disney))
             bot.answer_callback_query(call.id,"Abbonamento " + Disney_name + " Scontato a " + utente.get_name())
+        #Aggiunta/Rimozione Importo
+        # Search for user and amount into the reply
+        matchNetflix = re.search(r"\['(.+?)/Netflix_Amount:([-+]?\d*\.?\d+)\']", call.data)
+        if matchNetflix:
+            userName = matchNetflix.group(1)  # The 'utente' part before the slash
+            amount = float(matchNetflix.group(2))  # The 'amount' part after Netflix_Amount:
+            # check it is the user I want to add the amount to, then call add or remove depending on the sign
+            if utente.get_name() == userName:
+                if amount >= 0:
+                    utente.add_amount("Netflix",float(amount))
+                    bot.answer_callback_query(call.id,"Aggiunto " + str(amount) + " € a " + utente.get_name() + " per " + Netflix_name)
+                else:
+                    utente.remove_amount("Netflix",float(-amount))
+                    bot.answer_callback_query(call.id,"Rimosso " + str(amount) + " € a " + utente.get_name() + " per " + Netflix_name)
+        # Search for user and amount into the reply for Disney+
+        matchDisney = re.search(r"\['(.+?)/Disney\+_Amount:([-+]?\d*\.?\d+)\']", call.data)
+        if matchDisney:
+            userName = matchDisney.group(1)  # The 'utente' part before the slash
+            amount = float(matchDisney.group(2))  # The 'amount' part after Disney+_Amount:
+            # check it is the user I want to add the amount to, then call add or remove depending on the sign
+            if utente.get_name() == userName:
+                if amount >= 0:
+                    utente.add_amount("Disney+", float(amount))
+                    bot.answer_callback_query(call.id, "Aggiunto " + str(amount) + " € a " + utente.get_name() + " per " + Disney_name)
+                else:
+                    utente.remove_amount("Disney+", float(-amount))
+                    bot.answer_callback_query(call.id, "Rimosso " + str(amount) + " € a " + utente.get_name() + " per " + Disney_name)    
 
 t = Thread(target=automatic, args=(bool(Netflix),bool(Disney)))
 bot.infinity_polling(timeout=10, long_polling_timeout = 5)
