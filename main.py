@@ -27,7 +27,7 @@ Netflix = {Domenico.get_name(), Gaetano.get_name(), Dominic.get_name(), Chiara.g
 
 Disney = set()
 
-rinnovo_netflix=datetime.date(2021,12,12)
+rinnovo_netflix=datetime.date(2021,12,9)
 rinnovo_disney=datetime.date(2021,12,23)
 
 abbonamenti = {"Netflix":0,"Disney+":1}
